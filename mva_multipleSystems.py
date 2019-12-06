@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, stat
+import os
+import stat
+import matplotlib
+matplotlib.rcParams.update({'font.size': 14})
 
 
 def lmbda(x):  # we use to get lambda(m-1)
@@ -18,25 +21,25 @@ def find_arrival_rate_ratios(prob_rout_matrix):
     :return: the arrival rate/ summation of all arrival rates, for each server as
     an array
     """
-    identity_matrix = np.identity(3)
+    size = len(prob_rout_matrix)
+    identity_matrix = np.identity(size)
     transpose = np.transpose(prob_rout_matrix)
     mat = transpose - identity_matrix
-    mat[2] = [1, 1, 1]
-    q = np.array([0, 0, 1])
+    mat[size-1] = [1]*size
+    q = np.array([0]*(size-1)+[1])
     x = np.linalg.solve(mat, q)
     return x
 
 
 mode = os.fstat(0).st_mode
-if stat.S_ISFIFO(mode):
-    print("stdin is piped")
-elif stat.S_ISREG(mode):
+if stat.S_ISREG(mode):
     # print("stdin is redirected")
     throughput = []
     responseTime = []
     no_of_requests = []
     no_of_systems = int(input())
     concurrency_max = int(input())
+    throughput_max = 0
 
     for t in range(no_of_systems):
         serviceRates = list(map(int, input().split(',')))
@@ -52,7 +55,7 @@ elif stat.S_ISREG(mode):
         lm = np.arange(1, concurrency_max + 1)
 
         for s in range(no_of_services):
-            ET[s][0] = 1000 * ((1 / serviceRates[s]) + overheads[s])  # expected time in milli seconds
+            ET[s][0] = ((1 / serviceRates[s]) + overheads[s])  # expected time in milli seconds
 
         for n in range(1, concurrency_max):
             for s in range(no_of_services):
@@ -64,23 +67,32 @@ elif stat.S_ISREG(mode):
 
         ER = np.sum(ET, axis=0)  # Response Time
         X = lm / ER  # Throughput
+        if throughput_max <= max(X):
+            throughput_max = max(X)
         throughput.append(X)
         responseTime.append(ER)
         no_of_requests.append(EN)
 
     plt.figure()
-    plt.title('Throughput Vs Concurrency')
+    # plt.title('Throughput Vs Concurrency')
     plt.xlabel('Concurrency(N)')
     plt.ylabel('Throughput (requests/second)')
+    plt.ylim(ymin=0, ymax=throughput_max*1.1)
     for s in range(no_of_systems):
-        plt.plot(lm, throughput[s], label='system {}'.format(s + 1))
+        plt.plot(lm, throughput[s], label='{} service(s)'.format(s + 1))
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 3))
+    plt.legend()
+    plt.tight_layout()
 
     plt.figure()
-    plt.title('Response Time Vs Concurrency')
+    # plt.title('Response Time Vs Concurrency')
     plt.xlabel('Concurrency(N)')
-    plt.ylabel('Response Time (seconds)')
+    plt.ylabel('Average Response Time (ms)')
     for s in range(no_of_systems):
-        plt.plot(lm, responseTime[s], label='system {}'.format(s + 1))
+        plt.plot(lm, 1000*responseTime[s], label='{} service(s)'.format(s + 1))
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 3))
+    plt.legend()
+    plt.tight_layout()
     plt.show()
 
 else:
@@ -121,7 +133,6 @@ else:
         throughput.append(X)
         responseTime.append(ER)
         no_of_requests.append(EN)
-
 
     plt.figure()
     plt.title('Throughput Vs Concurrency')
