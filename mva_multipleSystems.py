@@ -74,7 +74,7 @@ if stat.S_ISREG(mode):
         no_of_requests.append(EN)
 
     plt.figure()
-    # plt.title('Throughput Vs Concurrency')
+    plt.title('Throughput Vs Concurrency')
     plt.xlabel('Concurrency(N)')
     plt.ylabel('Throughput (requests/second)')
     plt.ylim(ymin=0, ymax=throughput_max*1.1)
@@ -85,7 +85,7 @@ if stat.S_ISREG(mode):
     plt.tight_layout()
 
     plt.figure()
-    # plt.title('Response Time Vs Concurrency')
+    plt.title('Response Time Vs Concurrency')
     plt.xlabel('Concurrency(N)')
     plt.ylabel('Average Response Time (ms)')
     for s in range(no_of_systems):
